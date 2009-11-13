@@ -90,12 +90,17 @@ HOOKS = [:after_create, :after_update, :after_save]
 
 class << ActiveRecord::Base
   HOOKS.each do |hook|
-    code = %Q{def async_#{hook}(&b) add_async_hook(#{hook.inspect}, b) end}
+    code = %Q{def async_#{hook}(*methods, &b) add_async_hook(#{hook.inspect}, *methods, &b) end}
     class_eval(code, __FILE__, __LINE__ - 1)
   end
 
-  def add_async_hook(hook, block)
-    async_hooks[hook] << block
+  def add_async_hook(hook, *args, &block)
+    if args && args.first.is_a?(Symbol)
+      method = args.shift
+      async_hooks[hook] << lambda{|o| o.send(method)}
+    else
+      async_hooks[hook] << block
+    end
   end
 
   def async_hooks

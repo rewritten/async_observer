@@ -237,7 +237,7 @@ class AsyncObserver::Worker
   end
 end
 
-class ActiveRecord::ConnectionAdapters::MysqlAdapter
+class ActiveRecord::ConnectionAdapters::MysqlAdapter < ActiveRecord::ConnectionAdapters::AbstractAdapter
   def set_close_on_exec()
     @connection.set_close_on_exec()
   end
