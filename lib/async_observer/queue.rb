@@ -170,6 +170,10 @@ class Time
   def rrepr() "Time.parse('#{self.inspect}')" end
 end
 
+class Date
+  def rrepr() "Date.parse('#{self.inspect}')" end
+end
+
 module AsyncObserver::Extensions
   def rrepr()
     method = (respond_to? :get_cache) ? 'get_cache' : 'find'
