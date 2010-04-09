@@ -208,9 +208,9 @@ class AsyncObserver::Worker
     f.call(job) if f
     job.delete if job.ybody[:delete_first]
     run_code(job)
-    job.delete() unless jobs.ybody[:delete_first]
+    job.delete() unless job.ybody[:delete_first]
   rescue ActiveRecord::RecordNotFound => ex
-    unless jobs.ybody[:delete_first]
+    unless job.ybody[:delete_first]
       if job.age > 60
         job.delete() # it's old; this error is most likely permanent
       else
