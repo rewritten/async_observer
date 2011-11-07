@@ -26,6 +26,16 @@ require 'async_observer/util'
 
 module AsyncObserver; end
 
+class AsyncObserver::ReleaseJob < Exception
+  attr_reader :newpri, :delay
+  def initialize(options={})
+    super()
+    @newpri = options[:newpri]
+    @delay = options[:delay]
+  end
+end
+
+
 class AsyncObserver::Worker
   extend AsyncObserver::Util
   include AsyncObserver::Util
@@ -217,6 +227,8 @@ class AsyncObserver::Worker
         job.decay() # it could be replication delay so retry quietly
       end
     end
+  rescue AsyncObserver::ReleaseJob => release
+    job.release(release.newpri, release.decay)
   end
 
   def run_code(job)

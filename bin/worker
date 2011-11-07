@@ -20,6 +20,8 @@
 # Use the same pointer (and therefore same buffer) for stdout and stderr.
 $VERBOSE = nil; STDERR = $stderr = STDOUT = $stdout; $VERBOSE = false
 
+ASYNC_OBSERVER_WORKER = :worker
+
 require 'time'
 
 def load_rails_and_run
