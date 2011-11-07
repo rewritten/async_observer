@@ -20,6 +20,37 @@ require 'beanstalk-client'
 
 module AsyncObserver; end
 
+
+# Exception class to use in a method to inform the worker to release the job.
+#
+# Here is an example on how to release OR enqueue, depending on whether
+# the code is run by the worker or by the web server.
+#
+# module SomeMethods
+#   def method(*args)
+#     unless check_something
+#       if defined? ASYNC_OBSERVER_WORKER
+#         raise AsyncObserver::ReleaseJob, :delay => 1, :newpri => 513
+#       else
+#         send_async_opts :method, {:delay => 1, :pri => 513}, args
+#         return
+#       end
+#     end
+#     do_things
+#   end
+# end
+#
+class AsyncObserver::ReleaseJob < Exception
+  attr_reader :newpri, :delay
+  def initialize(options={})
+    super()
+    @newpri = options[:newpri]
+    @delay = options[:delay]
+  end
+end
+
+
+
 class AsyncObserver::Queue; end
 
 class << AsyncObserver::Queue

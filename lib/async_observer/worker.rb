@@ -26,16 +26,6 @@ require 'async_observer/util'
 
 module AsyncObserver; end
 
-class AsyncObserver::ReleaseJob < Exception
-  attr_reader :newpri, :delay
-  def initialize(options={})
-    super()
-    @newpri = options[:newpri]
-    @delay = options[:delay]
-  end
-end
-
-
 class AsyncObserver::Worker
   extend AsyncObserver::Util
   include AsyncObserver::Util
