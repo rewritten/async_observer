@@ -68,7 +68,15 @@ class AsyncObserver::Worker
     trap('TERM') { @stop = true }
     loop do
       break if @stop
-      safe_dispatch(get_job())
+      job = get_job
+      child = Process.fork()
+      if child
+        Process.wait(child)
+        RAILS_DEFAULT_LOGGER.info "[worker-fork] Child process ended, pid was #{child}"
+      else
+        RAILS_DEFAULT_LOGGER.info "[worker-fork] Child process started, pid is #{$$}"
+        safe_dispatch(job)
+      end
     end
   end
 
