@@ -68,15 +68,7 @@ class AsyncObserver::Worker
     trap('TERM') { @stop = true }
     loop do
       break if @stop
-      job = get_job
-      child = Process.fork()
-      if child
-        Process.wait(child)
-        RAILS_DEFAULT_LOGGER.info "[worker-fork] Child process ended, pid was #{child}"
-      else
-        RAILS_DEFAULT_LOGGER.info "[worker-fork] Child process started, pid is #{$$}"
-        safe_dispatch(job)
-      end
+      safe_dispatch(get_job())
     end
   end
 
@@ -152,7 +144,7 @@ class AsyncObserver::Worker
         rescue Exception => ex
           @q_hint = nil # in case there's something wrong with this conn
           RAILS_DEFAULT_LOGGER.info(
-            "#{ex.class}: #{ex}\n" + ex.backtrace.join("\n"))
+          "#{ex.class}: #{ex}\n" + ex.backtrace.join("\n"))
           RAILS_DEFAULT_LOGGER.info 'something is wrong. We failed to get a job.'
           RAILS_DEFAULT_LOGGER.info "sleeping for #{SLEEP_TIME}s..."
           sleep(SLEEP_TIME)
@@ -162,9 +154,25 @@ class AsyncObserver::Worker
   end
 
   def dispatch(job)
-    ActiveRecord::Base.verify_active_connections!
-    return run_ao_job(job) if async_observer_job?(job)
-    return run_other(job)
+    if child = Process.fork()
+      Process.wait(child)
+      RAILS_DEFAULT_LOGGER.info "[worker-fork] Child process ended, pid was #{child}"
+    else
+      RAILS_DEFAULT_LOGGER.info "[worker-fork] Child process started, pid is #{$$}"
+      begin
+        ActiveRecord::Base.verify_active_connections!
+        return run_ao_job(job) if async_observer_job?(job)
+        return run_other(job)
+      rescue Interrupt => ex
+        begin job.release() rescue :ok end
+        raise ex
+      rescue Exception => ex
+        handle_error(job, ex)
+      ensure
+        flush_logger
+        exit!
+      end
+    end
   end
 
   def safe_dispatch(job)
@@ -175,16 +183,7 @@ class AsyncObserver::Worker
           RAILS_DEFAULT_LOGGER.info "#{k}=#{v}"
         end
       end
-      begin
-        return dispatch(job)
-      rescue Interrupt => ex
-        begin job.release() rescue :ok end
-        raise ex
-      rescue Exception => ex
-        handle_error(job, ex)
-      ensure
-        flush_logger
-      end
+      return dispatch(job)
     end
   end
 

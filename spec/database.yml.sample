@@ -1,0 +1,19 @@
+sqlite3:
+  adapter: sqlite3
+  database: async_observer.sqlite3
+
+mysql:
+  adapter: mysql2
+  hostname: localhost
+  username: root
+  password:
+  database: async_observer
+  charset: utf8
+  
+postgresql:
+  adapter: postgresql
+  hostname: localhost
+  username: postgres
+  password:
+  database: async_observer
+  encoding: utf8
