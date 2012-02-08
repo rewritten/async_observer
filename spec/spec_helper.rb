@@ -26,6 +26,12 @@ unless [].respond_to?(:freq)
   end
 end
 
+begin
+  RAILS_DEFAULT_LOGGER
+rescue ArgumentError
+  RAILS_DEFAULT_LOGGER = Logger.new(File.join(File.dirname(__FILE__), "debug.log"))
+end
+
 db_name = ENV['DB'] || 'sqlite3'
 database_yml = File.expand_path('../database.yml', __FILE__)
 
@@ -51,7 +57,7 @@ if File.exists?(database_yml)
     ActiveRecord::Base.establish_connection(config)
   end
 
-  ActiveRecord::Base.logger = Logger.new(File.join(File.dirname(__FILE__), "debug.log"))
+  ActiveRecord::Base.logger = RAILS_DEFAULT_LOGGER
   ActiveRecord::Base.default_timezone = :utc
 
   ActiveRecord::Base.silence do
@@ -73,7 +79,7 @@ end
 
 clean_database!
 
-RAILS_DEFAULT_LOGGER = Logger.new(STDOUT)
-def RAILS_DEFAULT_LOGGER.format_message(severity, timestamp, progname, msg)
-  " #{progname} -#{severity}: #{timestamp} (#{$$}) #{msg}\n"
-end
+# RAILS_DEFAULT_LOGGER = Logger.new(STDOUT)
+# def RAILS_DEFAULT_LOGGER.format_message(severity, timestamp, progname, msg)
+#   " #{progname} -#{severity}: #{timestamp} (#{$$}) #{msg}\n"
+# end
