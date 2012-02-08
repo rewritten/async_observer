@@ -8,7 +8,7 @@ describe AsyncModel do
     end
 
     it "should execute async populate the description field" do
-      @as.async_send_opts(:update_description, {:pri => :direct}, @as.name)
+      @as.async_send(:update_description, @as.name)
       sleep(1)
       @as.reload
       @as.description.should == @as.name
@@ -16,7 +16,7 @@ describe AsyncModel do
     
     it "should send an async library message (touch)" do
       old = @as.updated_at
-      @as.async_send_opts(:touch, :pri => :direct)
+      @as.async_send :touch
       sleep(1)
       @as.reload
       @as.updated_at.should_not == old
